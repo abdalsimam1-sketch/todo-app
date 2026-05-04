@@ -13,20 +13,52 @@ export const AuthPage = () => {
     password: "",
     confirm: "",
   });
+  const [errors, setErrors] = useState({
+    emailError: "",
+    passwordError: "",
+    confirmError: "",
+  });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setErrors({ emailError: "", passwordError: "", confirmError: "" });
+    if (formData.email.length === 0) {
+      setErrors((current) => ({
+        ...current,
+        emailError: "Email field cannot be empty",
+      }));
+    }
+    if (formData.password.length === 0) {
+      setErrors((current) => ({
+        ...current,
+        passwordError: "Password field cannot be empty",
+      }));
+    } else if (formData.password.length < 8) {
+      setErrors((current) => ({
+        ...current,
+        passwordError: "Password cannot have less than 8 characters",
+      }));
+    }
+    if (mode === "signup" && formData.confirm !== formData.password) {
+      setErrors((current) => ({
+        ...current,
+        confirmError: "Passwords don't match",
+      }));
+    }
   };
 
   return (
-    <main className="flex justify-center items-center h-screen bg-gray-300">
-      <div className="max-w-md w-full border border-gray-500 rounded-lg p-5">
+    <main className="flex justify-center items-center min-h-screen bg-gray-300 ">
+      <div className="max-w-md w-full border border-gray-500 rounded-lg p-5 mx-5 overflow-hidden">
         <h1 className="font-bold text-2xl pb-3">
           {mode === "login" ? "Login" : "Signup"}
         </h1>
         <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
           <div className="flex flex-col">
-            <label htmlFor="email">Email</label>
+            <div className="flex justify-between">
+              <label htmlFor="email">Email</label>
+              <span className="text-red-800">{errors.emailError}</span>
+            </div>
             <input
               value={formData.email}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,7 +72,10 @@ export const AuthPage = () => {
           </div>
           <div className="flex flex-col">
             {" "}
-            <label htmlFor="password">Password</label>
+            <div className="flex justify-between">
+              <label htmlFor="password">Password</label>
+              <span className="text-red-800">{errors.passwordError}</span>
+            </div>
             <input
               value={formData.password}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,7 +89,11 @@ export const AuthPage = () => {
           </div>
           {mode === "signup" && (
             <div className="flex flex-col">
-              <label htmlFor="confirm">Confirm Password</label>
+              <div className="flex justify-between">
+                {" "}
+                <label htmlFor="confirm">Confirm Password</label>{" "}
+                <span className="text-red-800">{errors.confirmError}</span>
+              </div>
               <input
                 value={formData.confirm}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,7 +113,14 @@ export const AuthPage = () => {
               <>
                 Don't have an account yet ?{" "}
                 <span
-                  onClick={() => setMode("signup")}
+                  onClick={() => {
+                    setMode("signup");
+                    setErrors({
+                      emailError: "",
+                      passwordError: "",
+                      confirmError: "",
+                    });
+                  }}
                   className="underline cursor-pointer"
                 >
                   Signup
@@ -84,7 +130,14 @@ export const AuthPage = () => {
               <>
                 Already have an account ?{" "}
                 <span
-                  onClick={() => setMode("login")}
+                  onClick={() => {
+                    setMode("login");
+                    setErrors({
+                      emailError: "",
+                      passwordError: "",
+                      confirmError: "",
+                    });
+                  }}
                   className="underline cursor-pointer"
                 >
                   Login
