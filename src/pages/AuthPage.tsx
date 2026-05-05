@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../services/supabase";
+
 interface AuthForm {
   email: string;
   password: string;
@@ -19,31 +20,61 @@ export const AuthPage = () => {
     confirmError: "",
   });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setErrors({ emailError: "", passwordError: "", confirmError: "" });
+    const newErrors = {
+      emailError: "",
+      passwordError: "",
+      confirmError: "",
+    };
+
     if (formData.email.length === 0) {
-      setErrors((current) => ({
-        ...current,
-        emailError: "Email field cannot be empty",
-      }));
+      newErrors.emailError = "Email field cannot be empty";
     }
     if (formData.password.length === 0) {
-      setErrors((current) => ({
-        ...current,
-        passwordError: "Password field cannot be empty",
-      }));
+      newErrors.passwordError = "Password field cannot be empty";
     } else if (formData.password.length < 8) {
-      setErrors((current) => ({
-        ...current,
-        passwordError: "Password cannot have less than 8 characters",
-      }));
+      newErrors.passwordError = "Password cannot have less than 8 characters";
     }
     if (mode === "signup" && formData.confirm !== formData.password) {
-      setErrors((current) => ({
-        ...current,
-        confirmError: "Passwords don't match",
-      }));
+      newErrors.confirmError = "Passwords don't match";
+    }
+    setErrors(newErrors);
+    if (
+      newErrors.emailError ||
+      newErrors.confirmError ||
+      newErrors.passwordError
+    ) {
+      return;
+    }
+    if (mode === "login") {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+      if (error) {
+        let message = error.message;
+        if (message.includes("already registered")) {
+          message = "User already exists";
+        }
+
+        setErrors((current) => ({
+          ...current,
+          emailError: "Invalid credentials",
+        }));
+        return;
+      }
+    } else {
+      const { error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+      });
+      if (error) {
+        setErrors((current) => ({
+          ...current,
+          passwordError: error.message,
+        }));
+      }
     }
   };
 
@@ -120,6 +151,11 @@ export const AuthPage = () => {
                       passwordError: "",
                       confirmError: "",
                     });
+                    setFormData({
+                      email: "",
+                      password: "",
+                      confirm: "",
+                    });
                   }}
                   className="underline cursor-pointer"
                 >
@@ -136,6 +172,11 @@ export const AuthPage = () => {
                       emailError: "",
                       passwordError: "",
                       confirmError: "",
+                    });
+                    setFormData({
+                      email: "",
+                      password: "",
+                      confirm: "",
                     });
                   }}
                   className="underline cursor-pointer"
